@@ -1,10 +1,11 @@
 use pancurses::{endwin, initscr, noecho, Input};
 use rand::Rng;
 use std::collections::VecDeque;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const WIDTH: i32 = 40;
 const HEIGHT: i32 = 20;
+const FRAME_DURATION: Duration = Duration::from_millis(200); // Adjust the snake speed here
 
 #[derive(Clone, Copy, PartialEq)]
 struct Position {
@@ -43,6 +44,8 @@ fn main() {
     // Game loop
     let mut score = 0;
     loop {
+        let frame_start = Instant::now();
+
         // Input handling
         match window.getch() {
             Some(Input::KeyLeft) if !matches!(dir, Direction::Right) => dir = Direction::Left,
@@ -112,7 +115,12 @@ fn main() {
         window.mvprintw(HEIGHT, 0, format!("Score: {}", score));
 
         window.refresh();
-        std::thread::sleep(Duration::from_millis(100));
+
+        // Maintain consistent frame rate
+        let frame_duration = Instant::now() - frame_start;
+        if FRAME_DURATION > frame_duration {
+            std::thread::sleep(FRAME_DURATION - frame_duration);
+        }
     }
 
     // End the window
